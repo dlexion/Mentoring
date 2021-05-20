@@ -5,7 +5,6 @@
  * Use Thread, ThreadPool or Task classes for thread creation and any kind of synchronization constructions.
  */
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,9 +12,8 @@ using System.Threading.Tasks;
 namespace MultiThreading.Task5.Threads.SharedCollection
 {
 
-    class Program
+    public class Program
     {
-        //private static ConcurrentQueue<int> _queue = new ConcurrentQueue<int>();
         private static Queue<int> _queue = new Queue<int>();
         private static AutoResetEvent _waitAddHandle = new AutoResetEvent(false);
         private static AutoResetEvent _waitPrintHandle = new AutoResetEvent(false);
