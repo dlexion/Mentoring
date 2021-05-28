@@ -8,7 +8,6 @@
  */
 
 using System;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -65,18 +64,17 @@ namespace AsyncAwait.Task1.CancellationTokens
 
             Console.WriteLine($"The task for {n} started... Enter N to cancel the request:");
             task = Task.Run(() => Calculator.Calculate(n, token), token);
-            long sum = await task;
-            if (task.Status == TaskStatus.Canceled) // change to try catch
-            {
-                Console.WriteLine($"Sum for {n} cancelled...");
-
-            }
-            else
+            try
             {
 
+                long sum = await task;
                 Console.WriteLine($"Sum for {n} = {sum}.");
                 Console.WriteLine();
                 Console.WriteLine("Enter N: ");
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine($"Sum for {n} cancelled...");
             }
         }
     }

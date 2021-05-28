@@ -1,5 +1,4 @@
 ﻿using System.Threading;
-using System.Threading.Tasks;
 
 namespace AsyncAwait.Task1.CancellationTokens
 {
@@ -17,10 +16,6 @@ namespace AsyncAwait.Task1.CancellationTokens
                 Thread.Sleep(10);
 
                 token.ThrowIfCancellationRequested();
-                //if (token.IsCancellationRequested)
-                //{
-                //    return -1;
-                //}
             }
 
             return sum;
