@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using AsyncAwait.Task2.CodeReviewChallenge.Headers;
 using CloudServices.Interfaces;
@@ -23,20 +22,11 @@ namespace AsyncAwait.Task2.CodeReviewChallenge.Middleware
         {   
             string path = context.Request.Path;
 
-            Task staticRegTask = Task.Run(
-                () => _statisticService.RegisterVisitAsync(path)
-                .ConfigureAwait(false)
-                .GetAwaiter().OnCompleted(UpdateHeaders));
-            Console.WriteLine(staticRegTask.Status); // just for debugging purposes
-            
-            void UpdateHeaders()
-            {
-                context.Response.Headers.Add(
-                    CustomHttpHeaders.TotalPageVisits,
-                    _statisticService.GetVisitsCountAsync(path).GetAwaiter().GetResult().ToString());
-            }
+            await _statisticService.RegisterVisitAsync(path);
+            var visitsCount = await _statisticService.GetVisitsCountAsync(path);
 
-            Thread.Sleep(3000); // without this the statistic counter does not work
+            context.Response.Headers.Add(CustomHttpHeaders.TotalPageVisits, visitsCount.ToString());
+
             await _next(context);
         }
     }
