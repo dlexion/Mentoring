@@ -13,7 +13,7 @@ namespace InputService
             using (var channel = connection.CreateModel())
             {
                 channel.QueueDeclare("messaging",
-                    false,
+                    true,
                     false,
                     false,
                     null);
@@ -21,9 +21,12 @@ namespace InputService
                 string message = "Hello World!";
                 var body = Encoding.UTF8.GetBytes(message);
 
+                var properties = channel.CreateBasicProperties();
+                properties.Persistent = true;
+
                 channel.BasicPublish("",
                     "messaging",
-                    null,
+                    properties,
                     body);
                 Console.WriteLine(" [x] Sent {0}", message);
             }

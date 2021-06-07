@@ -13,22 +13,26 @@ namespace CentralService
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.QueueDeclare(queue: "messaging",
-                    durable: false,
-                    exclusive: false,
-                    autoDelete: false,
-                    arguments: null);
+                channel.QueueDeclare("messaging",
+                    true,
+                    false,
+                    false,
+                    null);
+
+                channel.BasicQos(0, 1, false);
 
                 var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += (model, ea) =>
+                consumer.Received += (sender, ea) =>
                 {
                     var body = ea.Body.ToArray();
                     var message = Encoding.UTF8.GetString(body);
                     Console.WriteLine(" [x] Received {0}", message);
+
+                    ((EventingBasicConsumer)sender)?.Model.BasicAck(ea.DeliveryTag, false);
                 };
-                channel.BasicConsume(queue: "messaging",
-                    autoAck: true,
-                    consumer: consumer);
+                channel.BasicConsume("messaging",
+                    false,
+                    consumer);
 
                 Console.WriteLine(" Press [enter] to exit.");
                 Console.ReadLine();
