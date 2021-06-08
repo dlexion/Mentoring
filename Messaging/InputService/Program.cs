@@ -80,6 +80,8 @@ namespace InputService
                     properties,
                     body);
                 Console.WriteLine($"{Path.GetFileName(path)} sent.");
+
+                File.Delete(path);
             }
         }
     }
