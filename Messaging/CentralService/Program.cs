@@ -1,22 +1,32 @@
 ﻿using System;
 using System.IO;
-using System.Text;
+using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace CentralService
 {
-    class Program
+    public class Program
     {
+        private const string PathToSaveConfigName = "SavePath";
+        private const string QueueNameConfigName = "QueueName";
+
+        private static IConfiguration _configuration;
+
         static void Main(string[] args)
         {
-            const string pathToSave = @"D:\Mentoring\messaging-central";
+            _configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", false, true)
+                .Build();
+
+            string pathToSave = _configuration.GetSection(PathToSaveConfigName).Value;
+            string queueName = _configuration.GetSection(QueueNameConfigName).Value;
 
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.QueueDeclare("messaging",
+                channel.QueueDeclare(queueName,
                     true,
                     false,
                     false,
@@ -37,7 +47,7 @@ namespace CentralService
                     ((EventingBasicConsumer)sender)?.Model.BasicAck(ea.DeliveryTag, false);
                     Console.WriteLine($"{name} saved");
                 };
-                channel.BasicConsume("messaging",
+                channel.BasicConsume(queueName,
                     false,
                     consumer);
 
