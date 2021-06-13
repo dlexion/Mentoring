@@ -77,26 +77,24 @@ namespace InputService
 
         private static void SendFileInChunks(string path, IModel channel, int maxMessageSize, string queueName)
         {
-            var publishBatch = channel.CreateBasicPublishBatch();
             byte[] buffer = new byte[maxMessageSize];
             int index = 0;
 
             using (Stream fs = File.OpenRead(path))
             {
                 var chunksCount = (fs.Length + maxMessageSize - 1) / maxMessageSize; //check
-                while (fs.Read(buffer, 0, buffer.Length) > 0)
+                int read;
+                while ((read = fs.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     var chunkProperties = GetBasicProperties(path, channel);
                     chunkProperties.Headers.Add("isChunk", true);
                     chunkProperties.Headers.Add("chunkPosition", index);
                     chunkProperties.Headers.Add("chunksCount", chunksCount);
 
-                    publishBatch.Add("", queueName, true, chunkProperties, new ReadOnlyMemory<byte>(buffer));
+                    channel.BasicPublish("", queueName, true, chunkProperties, new ReadOnlyMemory<byte>(buffer, 0, read));
                     index++;
                 }
             }
-
-            publishBatch.Publish();
         }
 
         private static void SendEntireFile(string path, IModel channel, string queueName)
