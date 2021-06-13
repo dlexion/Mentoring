@@ -29,7 +29,7 @@ namespace CentralService
             {
                 channel.QueueDeclare(queueName, true, false, false, null);
 
-                channel.BasicQos(0, 0, false); //check
+                channel.BasicQos(0, 0, false);
 
                 var consumer = new EventingBasicConsumer(channel);
                 consumer.Received += ReceiveFile;

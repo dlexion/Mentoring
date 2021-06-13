@@ -82,7 +82,7 @@ namespace InputService
 
             using (Stream fs = File.OpenRead(path))
             {
-                var chunksCount = (fs.Length + maxMessageSize - 1) / maxMessageSize; //check
+                var chunksCount = (fs.Length + maxMessageSize - 1) / maxMessageSize;
                 int read;
                 while ((read = fs.Read(buffer, 0, buffer.Length)) > 0)
                 {
