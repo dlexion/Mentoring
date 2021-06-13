@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
 namespace InputService
@@ -9,6 +10,7 @@ namespace InputService
     public class Program
     {
         private static IConfiguration _configuration;
+        private static ILogger _logger;
 
         static void Main(string[] args)
         {
@@ -16,10 +18,18 @@ namespace InputService
                 .AddJsonFile("appsettings.json", false, true)
                 .Build();
 
+            using var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                    .AddFilter("Default", LogLevel.Information)
+                    .AddConsole();
+            });
+            _logger = loggerFactory.CreateLogger<Program>();
+
             string pathToWatch = _configuration.GetSection("FolderToWatch").Value;
 
-            Console.WriteLine("Input service.");
-            Console.WriteLine($"Watching directory: {pathToWatch}");
+            _logger.LogInformation("Input service.");
+            _logger.LogInformation($"Watching directory: {pathToWatch}");
 
             Directory.CreateDirectory(pathToWatch);
             using var watcher = new FileSystemWatcher(pathToWatch);
@@ -35,7 +45,7 @@ namespace InputService
 
         private static void OnCreated(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine($"{e.Name} created.");
+            _logger.LogInformation($"{e.Name} created.");
             SendFile(e.FullPath);
         }
 
@@ -58,7 +68,7 @@ namespace InputService
                 {
                     SendFileInChunks(path, channel, maxMessageSize, queueName);
                 }
-                Console.WriteLine($"{Path.GetFileName(path)} sent.");
+                _logger.LogInformation($"{Path.GetFileName(path)} sent.");
 
                 File.Delete(path);
             }
@@ -91,6 +101,7 @@ namespace InputService
                     chunkProperties.Headers.Add("chunkPosition", index);
                     chunkProperties.Headers.Add("chunksCount", chunksCount);
 
+                    _logger.LogInformation($"Sending chunk {index + 1} out of {chunksCount}");
                     channel.BasicPublish("", queueName, true, chunkProperties, new ReadOnlyMemory<byte>(buffer, 0, read));
                     index++;
                 }
@@ -99,7 +110,7 @@ namespace InputService
 
         private static void SendEntireFile(string path, IModel channel, string queueName)
         {
-            Console.WriteLine("Sending entire file.");
+            _logger.LogInformation("Sending entire file.");
             var basicProperties = GetBasicProperties(path, channel);
             basicProperties.Headers.Add("isChunk", false);
             var body = File.ReadAllBytes(path);
