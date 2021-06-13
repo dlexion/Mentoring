@@ -8,10 +8,6 @@ namespace InputService
 {
     public class Program
     {
-        private const string PathToWatchConfigName = "FolderToWatch";
-        private const string FileFilterConfigName = "FileFilter";
-        private const string QueueNameConfigName = "QueueName";
-
         private static IConfiguration _configuration;
 
         static void Main(string[] args)
@@ -20,7 +16,7 @@ namespace InputService
                 .AddJsonFile("appsettings.json", false, true)
                 .Build();
 
-            string pathToWatch = _configuration.GetSection(PathToWatchConfigName).Value;
+            string pathToWatch = _configuration.GetSection("FolderToWatch").Value;
 
             Console.WriteLine("Input service.");
             Console.WriteLine($"Watching directory: {pathToWatch}");
@@ -28,17 +24,9 @@ namespace InputService
             Directory.CreateDirectory(pathToWatch);
             using var watcher = new FileSystemWatcher(pathToWatch);
 
-            watcher.NotifyFilter = NotifyFilters.Attributes
-                                   | NotifyFilters.CreationTime
-                                   | NotifyFilters.DirectoryName
-                                   | NotifyFilters.FileName
-                                   | NotifyFilters.LastAccess
-                                   | NotifyFilters.LastWrite
-                                   | NotifyFilters.Size;
-
             watcher.Created += OnCreated;
 
-            watcher.Filter = _configuration.GetSection(FileFilterConfigName).Value;
+            watcher.Filter = _configuration.GetSection("FileFilter").Value;
             watcher.EnableRaisingEvents = true;
 
             Console.WriteLine("Press enter to exit.");
@@ -53,36 +41,71 @@ namespace InputService
 
         private static void SendFile(string path)
         {
-            const string fileNameHeader = "name";
-            var queueName = _configuration.GetSection(QueueNameConfigName).Value;
+            var queueName = _configuration.GetSection("QueueName").Value;
+            var maxMessageSize = int.Parse(_configuration.GetSection("MaxMessageSize").Value);
 
             var factory = new ConnectionFactory() { HostName = "localhost" };
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.QueueDeclare(queueName,
-                    true,
-                    false,
-                    false,
-                    null);
+                channel.QueueDeclare(queueName, true, false, false, null);
 
-                var body = File.ReadAllBytes(path);
-
-                var properties = channel.CreateBasicProperties();
-                properties.Persistent = true;
-                properties.Headers = new Dictionary<string, object>()
+                if (new FileInfo(path).Length <= maxMessageSize)
                 {
-                    {fileNameHeader, Path.GetFileName(path)}
-                };
-
-                channel.BasicPublish("",
-                    queueName,
-                    properties,
-                    body);
+                    SendEntireFile(path, channel, queueName);
+                }
+                else
+                {
+                    SendFileInChunks(path, channel, maxMessageSize, queueName);
+                }
                 Console.WriteLine($"{Path.GetFileName(path)} sent.");
 
                 File.Delete(path);
             }
+        }
+
+        private static IBasicProperties GetBasicProperties(string path, IModel channel)
+        {
+            var properties = channel.CreateBasicProperties();
+            properties.Persistent = true;
+            properties.Headers = new Dictionary<string, object>()
+            {
+                {"name", Path.GetFileName(path)}
+            };
+            return properties;
+        }
+
+        private static void SendFileInChunks(string path, IModel channel, int maxMessageSize, string queueName)
+        {
+            var publishBatch = channel.CreateBasicPublishBatch();
+            byte[] buffer = new byte[maxMessageSize];
+            int index = 0;
+
+            using (Stream fs = File.OpenRead(path))
+            {
+                var chunksCount = (fs.Length + maxMessageSize - 1) / maxMessageSize; //check
+                while (fs.Read(buffer, 0, buffer.Length) > 0)
+                {
+                    var chunkProperties = GetBasicProperties(path, channel);
+                    chunkProperties.Headers.Add("isChunk", true);
+                    chunkProperties.Headers.Add("chunkPosition", index);
+                    chunkProperties.Headers.Add("chunksCount", chunksCount);
+
+                    publishBatch.Add("", queueName, true, chunkProperties, new ReadOnlyMemory<byte>(buffer));
+                    index++;
+                }
+            }
+
+            publishBatch.Publish();
+        }
+
+        private static void SendEntireFile(string path, IModel channel, string queueName)
+        {
+            Console.WriteLine("Sending entire file.");
+            var basicProperties = GetBasicProperties(path, channel);
+            basicProperties.Headers.Add("isChunk", false);
+            var body = File.ReadAllBytes(path);
+            channel.BasicPublish("", queueName, basicProperties, body);
         }
     }
 }
