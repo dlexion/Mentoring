@@ -25,15 +25,52 @@ namespace Expressions.Task3.E3SQueryProvider
 
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
-            if (node.Method.DeclaringType == typeof(Queryable)
-                && node.Method.Name == "Where")
+            switch (node.Method.Name)
             {
-                var predicate = node.Arguments[1];
-                Visit(predicate);
+                case "Where" when node.Method.DeclaringType == typeof(Queryable):
+                    var predicate = node.Arguments[1];
+                    Visit(predicate);
+                    return node;
 
-                return node;
+                case "Contains" when node.Method.DeclaringType == typeof(string):
+                    Visit(node.Object);
+
+                    _resultStringBuilder.Append("(*");
+                    Visit(node.Arguments[0]);
+                    _resultStringBuilder.Append("*)");
+
+                    return node;
+
+                case "Equals" when node.Method.DeclaringType == typeof(string):
+                    Visit(node.Object);
+
+                    _resultStringBuilder.Append("(");
+                    Visit(node.Arguments[0]);
+                    _resultStringBuilder.Append(")");
+
+                    return node;
+
+                case "StartsWith" when node.Method.DeclaringType == typeof(string):
+                    Visit(node.Object);
+
+                    _resultStringBuilder.Append("(");
+                    Visit(node.Arguments[0]);
+                    _resultStringBuilder.Append("*)");
+
+                    return node;
+
+                case "EndsWith" when node.Method.DeclaringType == typeof(string):
+                    Visit(node.Object);
+
+                    _resultStringBuilder.Append("(*");
+                    Visit(node.Arguments[0]);
+                    _resultStringBuilder.Append(")");
+
+                    return node;
+
+                default:
+                    return base.VisitMethodCall(node);
             }
-            return base.VisitMethodCall(node);
         }
 
         protected override Expression VisitBinary(BinaryExpression node)
@@ -48,6 +85,11 @@ namespace Expressions.Task3.E3SQueryProvider
                     _resultStringBuilder.Append("(");
                     Visit(constant);
                     _resultStringBuilder.Append(")");
+                    break;
+                case ExpressionType.AndAlso:
+                    Visit(node.Left);
+                    _resultStringBuilder.Append(" AND ");
+                    Visit(node.Right);
                     break;
 
                 default:

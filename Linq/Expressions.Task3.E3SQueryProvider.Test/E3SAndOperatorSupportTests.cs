@@ -10,6 +10,7 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Web;
 using Expressions.Task3.E3SQueryProvider.Models.Entities;
 using Xunit;
 
@@ -22,6 +23,7 @@ namespace Expressions.Task3.E3SQueryProvider.Test
         [Fact]
         public void TestAndQueryable()
         {
+            var requestGenerator = new FtsRequestGenerator("http://localhost:59744/");
             var translator = new ExpressionToFtsRequestTranslator();
             Expression<Func<IQueryable<EmployeeEntity>, IQueryable<EmployeeEntity>>> expression
                 = query => query.Where(e => e.Workstation == "EPRUIZHW006" && e.Manager.StartsWith("John"));
@@ -33,9 +35,15 @@ namespace Expressions.Task3.E3SQueryProvider.Test
                 // Operator between queries is AND, in other words result set will fit to both statements above
               ],
              */
-
-            // todo: create asserts for this test by yourself, because they will depend on your final implementation
-            throw new NotImplementedException("Please implement this test and the appropriate functionality");
+            var translated = translator.Translate(expression);
+            var uri = requestGenerator.GenerateRequestUrl(typeof(EmployeeEntity), translated);
+            var decoded = HttpUtility.UrlDecode(uri.OriginalString);
+            var expectedUrl =
+                "http://localhost:59744//searchFts?metaType=meta:people-suite:people-api:com.epam.e3s.app.people.api.data.EmployeeEntity" +
+                "&query={\"statements\":[{\"query\":\"Workstation:(EPRUIZHW006)\"},{\"query\":\"Manager:(John*)\"}]" +
+                ",\"filters\":null,\"sorting\":null,\"start\":0,\"limit\":10}";
+            Assert.Equal("Workstation:(EPRUIZHW006) AND Manager:(John*)", translated);
+            Assert.Equal(expectedUrl, decoded);
         }
 
         #endregion
