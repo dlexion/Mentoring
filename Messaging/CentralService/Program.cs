@@ -31,6 +31,8 @@ namespace CentralService
             _logger.LogInformation("Central service");
 
             _pathToSave = _configuration.GetSection("SaveFolder").Value;
+            Directory.CreateDirectory(_pathToSave);
+
             var queueName = _configuration.GetSection("QueueName").Value;
 
             var factory = new ConnectionFactory() { HostName = "localhost" };
@@ -68,9 +70,13 @@ namespace CentralService
         private static void ReceiveEntireFile(object sender, BasicDeliverEventArgs ea, string name)
         {
             _logger.LogInformation($"{name} received");
+            if (File.Exists(Path.Combine(_pathToSave, name)))
+            {
+                File.Delete(Path.Combine(_pathToSave, name));
+            }
+
             var body = ea.Body.ToArray();
 
-            Directory.CreateDirectory(_pathToSave);
             File.WriteAllBytes(Path.Combine(_pathToSave, name), body);
             _logger.LogInformation($"{name} saved to {_pathToSave}");
 
@@ -84,8 +90,12 @@ namespace CentralService
             var chunksCount = (long)ea.BasicProperties.Headers["chunksCount"];
             _logger.LogInformation($"{name} received chunk {chunkPosition + 1} out of {chunksCount}");
 
+            if (chunkPosition == 0 && File.Exists(Path.Combine(_pathToSave, name)))
+            {
+                File.Delete(Path.Combine(_pathToSave, name));
+            }
+
             var body = ea.Body.ToArray();
-            Directory.CreateDirectory(_pathToSave);
 
             using (var stream = new FileStream(Path.Combine(_pathToSave, name), FileMode.Append))
             {
