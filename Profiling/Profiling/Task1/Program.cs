@@ -15,7 +15,7 @@ namespace Task1
             sw.Start();
             var result2 = GeneratePasswordHashUsingSalt("Password123", Encoding.UTF8.GetBytes("someString1263127123761281826"));
             sw.Stop();
-            Console.WriteLine($"Elapsed miliseconds: {sw.ElapsedMilliseconds} | elapsed ticks: {sw.ElapsedTicks}");
+            Console.WriteLine($"Elapsed milliseconds: {sw.ElapsedMilliseconds} | elapsed ticks: {sw.ElapsedTicks}");
         }
 
         public static string GeneratePasswordHashUsingSalt(string passwordText, byte[] salt)
@@ -25,8 +25,8 @@ namespace Task1
             byte[] hash = pbkdf2.GetBytes(20);
 
             byte[] hashBytes = new byte[36];
-            Array.Copy(salt, 0, hashBytes, 0, 16); 
-            Array.Copy(hash, 0, hashBytes, 16, 20);
+            Buffer.BlockCopy(salt, 0, hashBytes, 0, 16 * sizeof(byte));
+            Buffer.BlockCopy(hash, 0, hashBytes, 16, 20 * sizeof(byte));
 
             var passwordHash = Convert.ToBase64String(hashBytes);
 
