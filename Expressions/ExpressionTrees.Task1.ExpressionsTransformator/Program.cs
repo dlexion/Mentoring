@@ -19,7 +19,6 @@ namespace ExpressionTrees.Task1.ExpressionsTransformer
             Console.WriteLine("Expression Visitor for increment/decrement.");
             Console.WriteLine();
 
-            // todo: feel free to add your code here
             var translator = new IncDecExpressionVisitor(new Dictionary<string, int>()
             {
                 {"x", 11}
