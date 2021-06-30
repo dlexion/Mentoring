@@ -9,7 +9,7 @@ namespace ExpressionTrees.Task2.ExpressionMapping.Tests
         // todo: add as many test methods as you wish, but they should be enough to cover basic scenarios of the mapping generator
 
         [TestMethod]
-        public void TestMethod1()
+        public void Map_FooObject_BarObjectWithMappedProperties()
         {
             var mapGenerator = new MappingGenerator();
             var mapper = mapGenerator.Generate<Foo, Bar>();

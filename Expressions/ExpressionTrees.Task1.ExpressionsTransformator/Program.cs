@@ -7,6 +7,8 @@
  * The results could be printed in console or checked via Debugger using any Visualizer.
  */
 using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace ExpressionTrees.Task1.ExpressionsTransformer
 {
@@ -18,6 +20,21 @@ namespace ExpressionTrees.Task1.ExpressionsTransformer
             Console.WriteLine();
 
             // todo: feel free to add your code here
+            var translator = new IncDecExpressionVisitor(new Dictionary<string, int>()
+            {
+                {"x", 11}
+            });
+            Expression<Func<int, int>> expression = x => ((x + 1) / 2) - 1;
+
+            Console.WriteLine("Before transformation:");
+            Console.WriteLine(expression);
+
+            var result = (Expression<Func<int>>)translator.Visit(expression);
+
+            Console.WriteLine("After transformation:");
+            Console.WriteLine(result);
+            var lambda = result.Compile();
+            Console.WriteLine(lambda());
 
             Console.ReadLine();
         }
