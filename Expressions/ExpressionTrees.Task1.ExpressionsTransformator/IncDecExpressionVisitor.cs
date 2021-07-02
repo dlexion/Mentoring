@@ -16,7 +16,7 @@ namespace ExpressionTrees.Task1.ExpressionsTransformer
         {
             if (_parametersMap.ContainsKey(node.Name))
             {
-                return base.Visit(Expression.Constant(_parametersMap[node.Name]));
+                return Expression.Constant(_parametersMap[node.Name]);
             }
             return base.VisitParameter(node);
         }
