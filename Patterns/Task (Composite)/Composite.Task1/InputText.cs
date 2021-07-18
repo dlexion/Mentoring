@@ -15,7 +15,7 @@ namespace Composite.Task1
 
         public string ConvertToString()
         {
-            throw new NotImplementedException();
+            return $"<inputText name='{name}' value='{value}'/>";
         }
     }
 }
