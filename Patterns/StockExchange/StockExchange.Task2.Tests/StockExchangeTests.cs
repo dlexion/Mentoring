@@ -9,16 +9,19 @@ namespace StockExchange.Task2.Tests
         StockPlayersFactory playersFactory;
         RedSocks redSocks;
         Blossomers blossomers;
+        private RossStones rossStones;
 
         [TestInitialize]
         public void Startup()
         {
+            StockMarket.Clear();
             playersFactory = new StockPlayersFactory();
 
             var players = playersFactory.CreatePlayers();
 
             redSocks = players.RedSocks;
             blossomers = players.Blossomers;
+            rossStones = players.RossStones;
         }
 
         [TestMethod]
@@ -119,6 +122,28 @@ namespace StockExchange.Task2.Tests
             blossomers.BuyOffer("RTC", 1).Should().BeFalse();
             blossomers.BuyOffer("PTC", 2).Should().BeFalse();
             blossomers.BuyOffer("MSC", 2).Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void Blossomers_should_not_buy_not_matched_RossStones_shares()
+        {
+            rossStones.SellOffer("RTC", 2).Should().BeFalse();
+            rossStones.SellOffer("MSC", 1).Should().BeFalse();
+
+            blossomers.BuyOffer("RTC", 1).Should().BeFalse();
+            blossomers.BuyOffer("PTC", 2).Should().BeFalse();
+            blossomers.BuyOffer("MSC", 2).Should().BeFalse();
+        }
+
+        [TestMethod]
+        public void RossStones_should_not_buy_not_matched_RedSocks_shares()
+        {
+            redSocks.SellOffer("RTC", 2).Should().BeFalse();
+            redSocks.SellOffer("MSC", 1).Should().BeFalse();
+
+            rossStones.BuyOffer("RTC", 1).Should().BeFalse();
+            rossStones.BuyOffer("PTC", 2).Should().BeFalse();
+            rossStones.BuyOffer("MSC", 2).Should().BeFalse();
         }
     }
 }

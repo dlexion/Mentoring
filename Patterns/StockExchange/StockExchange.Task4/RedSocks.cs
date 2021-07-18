@@ -4,9 +4,9 @@ namespace StockExchange.Task4
 {
     public class RedSocks
     {
-        public int SoldShares { get; }
+        public int SoldShares { get; private set; }
 
-        public int BoughtShares { get; }
+        public int BoughtShares { get; private set; }
 
         public RedSocks()
         {
@@ -14,12 +14,40 @@ namespace StockExchange.Task4
 
         public bool SellOffer(string stockName, int numberOfShares)
         {
-            throw new NotImplementedException();
+            StockMarket.StockRequestCompleted += Update;
+            return StockMarket.MakeStockRequest(new Stock(false, stockName, numberOfShares, nameof(RedSocks)));
         }
 
         public bool BuyOffer(string stockName, int numberOfShares)
         {
-            throw new NotImplementedException();
+            StockMarket.StockRequestCompleted += Update;
+            return StockMarket.MakeStockRequest(new Stock(true, stockName, numberOfShares, nameof(RedSocks)));
+        }
+
+        void Update(object sender, Stock stock)
+        {
+            if (stock.Player == nameof(RedSocks))
+            {
+                if (stock.Type)
+                {
+                    BoughtShares += stock.Number;
+                }
+                else
+                {
+                    SoldShares += stock.Number;
+                }
+            }
+            else
+            {
+                if (!stock.Type)
+                {
+                    BoughtShares += stock.Number;
+                }
+                else
+                {
+                    SoldShares += stock.Number;
+                }
+            }
         }
     }
 }

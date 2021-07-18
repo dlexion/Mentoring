@@ -7,7 +7,8 @@
             return new Players
             {
                 RedSocks = new RedSocks(),
-                Blossomers = new Blossomers()
+                Blossomers = new Blossomers(),
+                RossSocks = new RossSocks()
             };
         }
     }

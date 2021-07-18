@@ -13,6 +13,7 @@ namespace StockExchange.Task3.Tests
         [TestInitialize]
         public void Startup()
         {
+            StockMarket.Clear();
             playersFactory = new StockPlayersFactory();
 
             var players = playersFactory.CreatePlayers();

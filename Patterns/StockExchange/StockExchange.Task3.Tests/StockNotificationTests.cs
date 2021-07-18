@@ -9,16 +9,19 @@ namespace StockExchange.Task3.Tests
         StockPlayersFactory playersFactory;
         RedSocks redSocks;
         Blossomers blossomers;
+        private RossSocks rossSocks;
 
         [TestInitialize]
         public void Startup()
         {
+            StockMarket.Clear();
             playersFactory = new StockPlayersFactory();
 
             var players = playersFactory.CreatePlayers();
 
             redSocks = players.RedSocks;
             blossomers = players.Blossomers;
+            rossSocks = players.RossSocks;
         }
 
         [TestMethod]
@@ -118,6 +121,20 @@ namespace StockExchange.Task3.Tests
             blossomers.SellOffer("RTC", 2).Should().BeTrue();
             redSocks.BoughtShares.Should().Be(2);
             blossomers.SoldShares.Should().Be(2);
+        }
+
+        [TestMethod]
+        public void Blossomers_should_sell_matched_RedSocks_shares123()
+        {
+            rossSocks.BuyOffer("RTC2", 2).Should().BeFalse();
+            redSocks.BuyOffer("RTC", 2).Should().BeFalse();
+            redSocks.BoughtShares.Should().Be(0);
+
+            blossomers.SellOffer("RTC", 2).Should().BeTrue();
+            redSocks.BoughtShares.Should().Be(2);
+            blossomers.SoldShares.Should().Be(2);
+            rossSocks.BoughtShares.Should().Be(0);
+            rossSocks.SoldShares.Should().Be(0);
         }
 
         [TestMethod]

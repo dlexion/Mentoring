@@ -10,12 +10,12 @@ namespace StockExchange.Task2
 
         public bool SellOffer(string stockName, int numberOfShares)
         {
-            throw new NotImplementedException();
+            return StockMarket.MakeStockRequest(new Stock(false, stockName, numberOfShares, nameof(Blossomers)));
         }
 
         public bool BuyOffer(string stockName, int numberOfShares)
         {
-            throw new NotImplementedException();
+            return StockMarket.MakeStockRequest(new Stock(true, stockName, numberOfShares, nameof(Blossomers)));
         }
     }
 }
