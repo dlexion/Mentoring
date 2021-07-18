@@ -1,11 +1,9 @@
-﻿using Adapter.Task1;
-using Adapter.Task1.Tests;
+﻿using System.Collections.Generic;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using System.Collections.Generic;
 
-namespace TemplateMethod.Task1.Tests
+namespace Adapter.Task1.Tests
 {
     [TestClass]
     public class MyPrinterTests

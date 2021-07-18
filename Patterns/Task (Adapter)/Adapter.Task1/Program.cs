@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TemplateMethod.Task1
+namespace Adapter.Task1
 {
     class Program
     {
